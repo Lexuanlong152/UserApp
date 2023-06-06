@@ -8,7 +8,7 @@ function DeleteUser(props) {
 
   const handleDeleteUser = async () => {
     let res = await deleteUser(dataDeleteUser.id);
-    console.log(res)
+   
     if (res && +res.statusCode===204){
       toast.success("Delete User Success");
       handleDeleteFromModal ( dataDeleteUser);

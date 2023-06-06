@@ -5,43 +5,25 @@ import { postCreateUser } from "../services/UserSevice";
 import { ToastContainer, toast } from "react-toastify";
 
 function AddUser(props) {
-  const {handleUpdateTable} =props;
-  const [showAddModal, setShowAddModal] = useState(false);
+  const { showAddModal, handleClose, handleUpdateTable } = props;
   const [name, setName] = useState("");
   const [job, setJob] = useState("");
 
-  const handleClickAddButton = () => {
-    setShowAddModal(true);
-  };
-  const handleClose = () => {
-    setShowAddModal(false);
-  };
-
   const handleAddUser = async () => {
-    // console.log( name,job)
     let res = await postCreateUser(name, job);
-    // console.log(res);
     if (res && res.id) {
       handleClose();
       setName("");
       setJob("");
       toast.success("Add User Success");
-      handleUpdateTable({first_name : name ,id : res.id})
+      handleUpdateTable({ first_name: name, id: res.id });
     } else {
-      toast.error ('Add User Unsucces')
+      toast.error("Add User Unsucces");
     }
   };
 
   return (
     <>
-      <div className="my-3 d-flex align-items-center justify-content-between">
-        <span>
-          <b>List User :</b>
-        </span>
-        <Button onClick={handleClickAddButton} className="btn btn-primary">
-          Add New User
-        </Button>
-      </div>
       <div
         className="modal show"
         style={{ display: "block", position: "initial" }}

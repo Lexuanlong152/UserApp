@@ -8,19 +8,21 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import EditUser from "./EditUser";
 import _, { debounce } from "lodash";
 import DeleteUser from "./DeleteUser";
-import "./UserTable.scss";
-
+import { CSVLink } from "react-csv";
+import Papa from "papaparse";
+import { toast } from "react-toastify";
 
 function UserTable(props) {
   const [listUsers, setListUser] = useState([]);
   const [totalPages, setTotalPages] = useState(0);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [dataEditUser, setDataEditUser] = useState({});
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [dataDeleteUser, setDataDeleteUser] = useState({});
   const [sortBy, setSortBy] = useState("asc");
   const [fieldSort, setFieldSort] = useState("id");
- 
+  const [dataExport, setDataExport] = useState([]);
 
   useEffect(() => {
     getUsers(1);
@@ -41,6 +43,11 @@ function UserTable(props) {
   const handleUpdateTable = (user) => {
     setListUser([user, ...listUsers]);
   };
+
+  const handleClickAddButton = () => {
+    setShowAddModal(true);
+  };
+
   const handleClickEditButton = (user) => {
     setDataEditUser(user);
     setShowEditModal(true);
@@ -53,6 +60,7 @@ function UserTable(props) {
   const handleClose = () => {
     setShowEditModal(false);
     setShowDeleteModal(false);
+    setShowAddModal(false);
   };
 
   const handleEditFromModal = (user) => {
@@ -79,32 +87,129 @@ function UserTable(props) {
 
   const handleSearch = debounce((event) => {
     let textSearch = event.target.value;
-   
+
     if (textSearch) {
-      console.log("hi");
       let cloneListUser = _.cloneDeep(listUsers);
       cloneListUser = _.filter(cloneListUser, (listUser) =>
         listUser.email.includes(textSearch)
       );
-     
+
       setListUser(cloneListUser);
     } else {
       getUsers(1);
     }
-  },1000);
+  }, 1000);
 
- 
+  const getUserExport = (event, done) => {
+    let result = [];
+    if (listUsers && listUsers.length > 0) {
+      result.push(["id", "name", "first_name", "last_name"]);
+      listUsers.map((user) => {
+        let array = [];
+        array[0] = user.id;
+        array[1] = user.email;
+        array[2] = user.first_name;
+        array[3] = user.last_name;
+        result.push(array);
+      });
+      setDataExport(result);
+      done();
+    }
+  };
+
+  const handleImportCSV = (e) => {
+    if (e.target && e.target.files && e.target.files[0]) {
+      let file = e.target.files[0];
+      if (file.type !== "text/csv") {
+        toast.error("File is not CSV");
+        // alert("File is not CSV");
+        return;
+      }
+      Papa.parse(file, {
+        complete: function (results) {
+          let rawCSV = results.data;
+          if (rawCSV.length > 0) {
+            if (rawCSV[0] && rawCSV[0].length === 3) {
+              if (
+                rawCSV[0][0] !== "email" ||
+                rawCSV[0][1] !== "first_name" ||
+                rawCSV[0][2] !== "last_name"
+              ) {
+                toast.error( "Wrong fomat header CSV file");
+              } else {
+                let result = [];
+                rawCSV.map((user, index) => {
+                  if (index > 0 && user.length === 3) {
+                    let obj = {};
+                    obj.email = user[0];
+                    obj.first_name = user[1];
+                    obj.last_name = user[2];
+                    result.push(obj);
+                  }
+                });
+                setListUser(result);
+              }
+            } else {
+              toast.error("Wrong fomat with CSV file");
+              // alert("Wrong fomat with CSV file");
+            }
+          } else {
+            toast.error("Not found data in CSV file");
+            // alert("Not found data in CSV file");
+          }
+        },
+      });
+    }
+  };
+
   return (
     <>
-       <div className="col-6 mt-3">
-        <input 
-        className=" form-control" 
-        // value={searchKey}
-        placeholder="Search ... "
-        onChange={(event) => handleSearch(event)}
+      <div className="my-3 d-flex align-items-center justify-content-between">
+        <span>
+          <b>List User :</b>
+        </span>
+        <div>
+          <label htmlFor="import-file" className="btn btn-secondary me-3">
+            <i className="fa-solid fa-file-import me-2"></i>
+            Import
+          </label>
+          <input
+            id="import-file"
+            type="file"
+            onChange={(e) => handleImportCSV(e)}
+            hidden
+          />
+          <CSVLink
+            data={dataExport}
+            asyncOnClick={true}
+            onClick={(event, done) => getUserExport(event, done)}
+            filename={"user.csv"}
+            className="btn btn-info me-3"
+            target="_blank"
+          >
+            <i className="fa-solid fa-file-export me-2"></i>
+            Export
+          </CSVLink>
+          <Button onClick={handleClickAddButton} className="btn btn-primary">
+            <i className="fa-solid fa-circle-plus me-2"></i>
+            Add New
+          </Button>
+        </div>
+      </div>
+      <AddUser
+        showAddModal={showAddModal}
+        handleClose={handleClose}
+        // handleClickAddButton = {handleClickAddButton}
+        handleUpdateTable={handleUpdateTable}
+      />
+      <div className="col-6 my-3">
+        <input
+          className=" form-control"
+          // value={searchKey}
+          placeholder="Search email... "
+          onChange={(event) => handleSearch(event)}
         />
       </div>
-      <AddUser handleUpdateTable={handleUpdateTable} />
       <EditUser
         showEditModal={showEditModal}
         handleClose={handleClose}
@@ -162,8 +267,8 @@ function UserTable(props) {
         <tbody className=" ">
           {listUsers &&
             listUsers.length > 0 &&
-            listUsers.map((listUser) => (
-              <tr key={listUser.id}>
+            listUsers.map((listUser, index) => (
+              <tr key={index}>
                 <td>{listUser.id}</td>
                 <td>{listUser.email}</td>
                 <td>{listUser.first_name}</td>
