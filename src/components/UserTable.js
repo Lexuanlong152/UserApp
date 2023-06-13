@@ -199,7 +199,6 @@ function UserTable(props) {
       <AddUser
         showAddModal={showAddModal}
         handleClose={handleClose}
-        // handleClickAddButton = {handleClickAddButton}
         handleUpdateTable={handleUpdateTable}
       />
       <div className="col-6 my-3">

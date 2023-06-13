@@ -6,16 +6,17 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "react-toastify/dist/ReactToastify.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import { BrowserRouter } from "react-router-dom";
-import { UserProvider } from "./context/UserContext";
+import store from "./redux/store";
+import { Provider } from "react-redux";
 
 ReactDOM.render(
-  <React.StrictMode>
-   <UserProvider>
-   <BrowserRouter>
-      <App />
-    </BrowserRouter>
-   </UserProvider>
-  </React.StrictMode>,
+  <Provider store={store}>
+    <React.StrictMode>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </React.StrictMode>
+  </Provider>,
   document.getElementById("root")
 );
 

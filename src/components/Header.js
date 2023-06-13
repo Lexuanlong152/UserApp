@@ -4,13 +4,16 @@ import Navbar from "react-bootstrap/Navbar";
 import { NavLink, useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
 import { useContext } from "react";
+import { handleLogoutRedux } from "../redux/actions/UserActions";
+import { useDispatch } from "react-redux";
 
 function Header(props) {
   const { logout } = useContext(UserContext);
+  const dispatch = useDispatch();
 
   const navigate = useNavigate();
   const handleLogout = () => {
-    logout();
+    dispatch(handleLogoutRedux);
     navigate("/login");
   };
   return (

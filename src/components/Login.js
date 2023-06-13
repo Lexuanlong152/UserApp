@@ -1,17 +1,18 @@
 import "../assert/css/LoginLayout.css";
-import { useState, useContext } from "react";
-import { loginApi } from "../services/UserSevice";
+import { useState,useEffect} from "react";
 import { ToastContainer, toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import { UserContext } from "../context/UserContext";
+import { handleLoginRedux } from "../redux/actions/UserActions";
+import { useDispatch , useSelector} from "react-redux";
+
 function Login() {
+  const dispatch = useDispatch()
   const [typePassword, setTypePassword] = useState("password");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const account = useSelector(state =>state.user.account)
 
   const navigate = useNavigate();
-
-  const { login } = useContext(UserContext);
 
   const handleChangeType = () => {
     if (typePassword === "password") {
@@ -21,29 +22,37 @@ function Login() {
     }
   };
 
-  // useEffect((()=>{
-  //   let token= localStorage.getItem('token');
-  //   if(token){
-  //     navigate('/');
-  //   }
-  // }),[])
+  useEffect((()=>{
+   
+    if(account && account.auth===true){
+      navigate('/');
+    }
+  }),[account])
 
-  const handleLogin = async () => {
+  const handleLogin = () => {
     if (!email || !password) {
       toast.error("Email or Password is required");
       return;
     }
-    let res = await loginApi(email.trim(), password);
-    if (res && res.token) {
-      // localStorage.setItem("token", res.token);
-      login(email);
-      navigate("/");
-    } else {
-      if (res && res.status === 400) {
-        toast.error(res.data.error);
-      }
-    }
+    dispatch(handleLoginRedux(email,password));
+    // let res = await loginApi(email.trim(), password);
+    // if (res && res.token) {
+    //   // localStorage.setItem("token", res.token);
+    //   login(email);
+    //   navigate("/");
+    // } else {
+    //   if (res && res.status === 400) {
+    //     toast.error(res.data.error);
+    //   }
+    // }
   };
+
+  const handleOnKeyDown = (e) =>{
+    if(e && e.key === 'Enter'){
+      console.log(e.key);
+     handleLogin();
+    }
+  }
   return (
     <>
       <div className="login_form_cover">
@@ -71,6 +80,7 @@ function Login() {
                   className="input_text me-2"
                   autoComplete="off"
                   onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={(e)=> handleOnKeyDown(e)}
                 />
                 <i
                   class="fa-regular fa-eye-slash"
